@@ -32,7 +32,7 @@ class MainFragment : Fragment() {
 
     private val channels = Array<String>(100) { "Channel $it" }
     private val TAG: String = "MainFragment"
-    private val channelsUris = Array<Uri> (100) { Uri.parse("http://82.193.96.217:12999/udp/239.203.0.5:1234") }
+    private val channelsUris = Array<Uri> (100) { Uri.parse("http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_1080p_30fps_normal.mp4") }
     private lateinit var viewAdapter : RecyclerView.Adapter<*>
     private lateinit var viewManager : RecyclerView.LayoutManager
     private lateinit var playerView : PlayerView
