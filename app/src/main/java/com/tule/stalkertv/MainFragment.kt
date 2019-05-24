@@ -18,9 +18,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.extractor.DefaultExtractorInput
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
+import com.google.android.exoplayer2.extractor.ExtractorsFactory
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.upstream.DefaultDataSource
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.fragment_main.*
+import javax.sql.DataSource
 import kotlin.math.acos
 
 
@@ -73,7 +81,7 @@ class MainFragment : Fragment() {
         player.playWhenReady = true
     }
 
-    class ChannelsAdapter (private val channels : Array<String>)
+    inner class ChannelsAdapter (private val channels : Array<String>)
         :RecyclerView.Adapter<ChannelsAdapter.ChannelsViewHolder>() {
         override fun getItemCount(): Int {
             return channels.size
@@ -81,7 +89,14 @@ class MainFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ChannelsViewHolder, position: Int) {
             val textView = holder.linearView.findViewById<TextView>(R.id.channel_text_view)
-            holder.linearView.setOnClickListener({ Log.d("Hello", "Hello $position") })
+            val listener = View.OnClickListener {
+                val dataSource = DefaultDataSourceFactory(activity, Util.getUserAgent(activity, "superbrowser"))
+                val mediaSource = ProgressiveMediaSource.Factory(dataSource).createMediaSource(channelsUris.get(position))
+                player.prepare(mediaSource)
+                player.playWhenReady = true
+                channelsUris.get(position)
+            }
+            holder.linearView.setOnClickListener(listener)
             textView.text = channels[position]
         }
 
@@ -92,7 +107,7 @@ class MainFragment : Fragment() {
             return ChannelsViewHolder(linearLayout)
         }
 
-        class ChannelsViewHolder ( val linearView: LinearLayout) : RecyclerView.ViewHolder(linearView)
+        inner class ChannelsViewHolder ( val linearView: LinearLayout) : RecyclerView.ViewHolder(linearView)
     }
 
 }
