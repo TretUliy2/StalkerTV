@@ -41,7 +41,7 @@ class MainFragment : Fragment() {
     private val channels = Array<String>(100) { "Channel $it" }
     private val TAG: String = "MainFragment"
     private val channelsUris = Array<Uri> (100) { Uri.parse("http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_1080p_30fps_normal.mp4") }
-    private lateinit var viewAdapter : RecyclerView.Adapter<*>
+    private lateinit var viewAdapter : ChannelsAdapter
     private lateinit var viewManager : RecyclerView.LayoutManager
     private lateinit var playerView : PlayerView
     private lateinit var player : ExoPlayer
@@ -60,6 +60,15 @@ class MainFragment : Fragment() {
         mActivity = activity
         viewManager  = LinearLayoutManager(activity)
         viewAdapter = ChannelsAdapter(channels)
+        viewAdapter.setListener(object : ChannelsAdapter.Listener {
+            override fun onClick(position: Int) {
+                val dataSource = DefaultDataSourceFactory(activity, Util.getUserAgent(activity, "superbrowser"))
+                val mediaSource = ProgressiveMediaSource.Factory(dataSource).createMediaSource(channelsUris.get(position))
+                player.prepare(mediaSource)
+                player.playWhenReady = true
+                channelsUris.get(position)
+            }
+        })
         val view =  inflater.inflate(R.layout.fragment_main, container, false)
         val channelsList = view.findViewById<RecyclerView>(R.id.channelsList)
         playerView = view.findViewById(R.id.playerView)
@@ -81,22 +90,26 @@ class MainFragment : Fragment() {
         player.playWhenReady = true
     }
 
-    inner class ChannelsAdapter (private val channels : Array<String>)
+    class ChannelsAdapter (private val channels : Array<String>)
         :RecyclerView.Adapter<ChannelsAdapter.ChannelsViewHolder>() {
+        private var listener : Listener? = null
+
+        interface Listener {
+            fun onClick(position: Int)
+        }
+
         override fun getItemCount(): Int {
             return channels.size
         }
 
+        fun setListener(newListener : Listener) {
+            listener = newListener
+        }
+
+
         override fun onBindViewHolder(holder: ChannelsViewHolder, position: Int) {
             val textView = holder.linearView.findViewById<TextView>(R.id.channel_text_view)
-            val listener = View.OnClickListener {
-                val dataSource = DefaultDataSourceFactory(activity, Util.getUserAgent(activity, "superbrowser"))
-                val mediaSource = ProgressiveMediaSource.Factory(dataSource).createMediaSource(channelsUris.get(position))
-                player.prepare(mediaSource)
-                player.playWhenReady = true
-                channelsUris.get(position)
-            }
-            holder.linearView.setOnClickListener(listener)
+            holder.linearView.setOnClickListener({ listener?.onClick(position) })
             textView.text = channels[position]
         }
 
@@ -107,7 +120,7 @@ class MainFragment : Fragment() {
             return ChannelsViewHolder(linearLayout)
         }
 
-        inner class ChannelsViewHolder ( val linearView: LinearLayout) : RecyclerView.ViewHolder(linearView)
+        class ChannelsViewHolder ( val linearView: LinearLayout) : RecyclerView.ViewHolder(linearView)
     }
 
 }
